@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "alertmanager-sns-forwarder.fullname" . }}
+  labels:
+    app: {{ template "alertmanager-sns-forwarder.name" . }}
+    chart: {{ template "alertmanager-sns-forwarder.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: webhook-port
+      name: webhook-port
+  selector:
+    app: {{ template "alertmanager-sns-forwarder.name" . }}
+    release: {{ .Release.Name }}

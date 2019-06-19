@@ -1,0 +1,73 @@
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: {{ template "alertmanager-sns-forwarder.fullname" . }}
+  labels:
+    app: {{ template "alertmanager-sns-forwarder.name" . }}
+    chart: {{ template "alertmanager-sns-forwarder.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ template "alertmanager-sns-forwarder.name" . }}
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ template "alertmanager-sns-forwarder.name" . }}
+        release: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args: ["--debug", "--arn-prefix={{ .Values.arn }}"]
+          env:
+            - name: AWS_REGION
+              value: "{{ .Values.region }}"
+            - name: AWS_DEFAULT_REGION
+              value: "{{ .Values.region }}"
+            - name: SNS_FORWARDER_TEMPLATE_PATH
+              value: "{{ .Values.image.template }}"
+          ports:
+            - name: webhook-port
+              containerPort: 9087
+     
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: webhook-port
+            initialDelaySeconds: 30
+            timeoutSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: webhook-port
+            initialDelaySeconds: 10
+            timeoutSeconds: 10
+          
+          volumeMounts:
+            - mountPath: /tmp
+              name: volume-configmap
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+    {{- with .Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+
+      volumes:
+        - name: volume-configmap
+          configMap:
+            name: {{ template "alertmanager-sns-forwarder.fullname" . }}-configmap
+

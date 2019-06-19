@@ -1,0 +1,16 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ template "alertmanager-sns-forwarder.fullname" . }}
+  labels:
+    app: {{ template "alertmanager-sns-forwarder.name" . }}
+    chart: {{ template "alertmanager-sns-forwarder.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  endpoints:
+    - port: webhook-port
+      
+  selector:
+    app: {{ template "alertmanager-sns-forwarder.name" . }}
+    release: {{ .Release.Name }}

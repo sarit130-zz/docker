@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "alertmanager-sns-forwarder.fullname" . }}-configmap
+  labels:
+    app: {{ template "alertmanager-sns-forwarder.name" . }}
+    chart: {{ template "alertmanager-sns-forwarder.chart" . }}
+    release: "{{ .Release.Name }}"
+    heritage: "{{ .Release.Service }}"
+data:
+  "template.tmpl": {{ .Files.Get "alerttemp/template.tmpl" | quote  }}
+  
